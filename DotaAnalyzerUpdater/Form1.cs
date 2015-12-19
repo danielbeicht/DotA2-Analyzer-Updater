@@ -14,6 +14,7 @@ using System.Data.SqlClient;
 using System.Data.SqlTypes;
 using System.Net;
 using System.Globalization;
+using System.Threading;
 
 namespace DotaAnalyzerUpdater
 {
@@ -65,8 +66,8 @@ namespace DotaAnalyzerUpdater
                            "Venomancer", "Viper", "Visage", "Warlock", "Weaver",
                            "Windranger", "Winter Wyvern", "Witch Doctor", "Wraith King", "Zeus"
                            };
+        // Initialize global variables
         public static int heroCount = heroNames.Length;
-
         public Hero[] heroList = new Hero[heroCount];
 
         SqlConnection connection;
@@ -76,10 +77,24 @@ namespace DotaAnalyzerUpdater
         int remainingMinutes = 600;
 
 
+        public delegate void delUpdateUIProgressBar(int value);
+        public delegate void delUpdateUILabelInformation(string text);
+        public delegate void delUpdateUILabelUpdateStatus(string text);
+
+        ThreadStart threadStart;
+        Thread myUpdateThread;
+
+
 
         public Form1()
         {
             InitializeComponent();
+            Init();
+        }
+
+
+        private void Init()
+        {
             progressBar1.Maximum = heroCount;
 
             //Create all heroes with their properties
@@ -89,26 +104,67 @@ namespace DotaAnalyzerUpdater
                 heroList[i] = hero;
             }
 
+            // Configure timer
             timer = new System.Timers.Timer(60000);
             timer.Elapsed += new ElapsedEventHandler(PerformUpdate);
             timer.Enabled = true;
+
+        }
+
+        // delegate Update GUI-Methods
+        public void UpdateUIProgressBar(int value)
+        {
+            progressBar1.Value = value;
         }
 
 
 
-        private void Form1_Load(object sender, EventArgs e)
+        public void UpdateUILabelInformation(String text)
         {
-            
+            labelInformation.Text = text;
+        }
+
+
+
+        public void UpdateUILabelUpdateStatus(String text)
+        {
+            labelUpdateStatus.Text = text;
+        }
+
+
+
+        private void CreateUpdateThread()
+        {
+            threadStart = new ThreadStart(StartUpdate);
+            myUpdateThread = new Thread(threadStart);
+            myUpdateThread.Name = "Second Thread";
+            myUpdateThread.Start();
+        }
+
+
+
+        private void StartUpdate()
+        {
+            delUpdateUILabelUpdateStatus DelUpdateUILabelUpdateStatus = new delUpdateUILabelUpdateStatus(UpdateUILabelUpdateStatus);
+            this.labelUpdateStatus.BeginInvoke(DelUpdateUILabelUpdateStatus, "Update In Progress");
+            if (DownloadData())
+            {
+                UpdateDatabase();
+            }
+            remainingMinutes = 600;
+            this.labelUpdateStatus.BeginInvoke(DelUpdateUILabelUpdateStatus, "Next Auto Update in 600 minutes.");
         }
 
 
 
         private void UpdateDatabase()
         {
+            delUpdateUILabelInformation DelUpdateUILabelInformation = new delUpdateUILabelInformation(UpdateUILabelInformation);
             //Create connection to database
-            connection = new SqlConnection("data source = 127.0.0.1; database = example; user id = example; password = XXX");
+            connection = new SqlConnection("data source = 192.168.2.202; database = test; user id = testuser2; password = 13DotAMZHostAnalyzer37");
             connection.Open();
 
+            
             string deleteAktualisierungRequest = "delete from Aktualisierung";
             SqlCommand com;
             com = new SqlCommand(deleteAktualisierungRequest, connection);
@@ -134,6 +190,7 @@ namespace DotaAnalyzerUpdater
             bool newHero = false;
             for (int i = 0; i < heroCount; i++)
             {
+                this.labelInformation.BeginInvoke(DelUpdateUILabelInformation, "Insert hero-data into database: " + heroNames[i]);
                 heroExistsRequest = "select COUNT(*) from Held where HeldName = '" + heroList[i].name + "'";
                 com = new SqlCommand(heroExistsRequest, connection);
                 heroExistsCount = Convert.ToInt32(com.ExecuteScalar().ToString());
@@ -166,6 +223,7 @@ namespace DotaAnalyzerUpdater
                 string updateIndexRequest;
                 for (int i = 0; i < heroCount; i++)
                 {
+                    this.labelInformation.BeginInvoke(DelUpdateUILabelInformation, "Update hero-data-indices in database: " + heroNames[i]);
                     updateIndexRequest = "update Held set HeldIndex=@HeldIndex where HeldName=@HeldName";
                     com = new SqlCommand(updateIndexRequest, connection);
                     com.Parameters.AddWithValue("@HeldIndex", i);
@@ -173,7 +231,6 @@ namespace DotaAnalyzerUpdater
                     com.ExecuteNonQuery();
                 }
             }
-            
 
 
             //Add Matchup entries
@@ -182,6 +239,7 @@ namespace DotaAnalyzerUpdater
             {
                 for (int j = 0; j < heroCount; j++)
                 {
+                    this.labelInformation.BeginInvoke(DelUpdateUILabelInformation, "Add Matchup entry: " + heroNames[i] + " vs. " + heroNames[j]);
                     com = new SqlCommand(addMatchupRequest, connection);
                     com.Parameters.AddWithValue("@HeldID1", heroId[i]);
                     com.Parameters.AddWithValue("@HeldID2", heroId[j]);
@@ -191,7 +249,7 @@ namespace DotaAnalyzerUpdater
                     com.ExecuteNonQuery();  
                 }
             }
-
+            this.labelInformation.BeginInvoke(DelUpdateUILabelInformation, "Success");
             connection.Close();
         }
 
@@ -202,24 +260,22 @@ namespace DotaAnalyzerUpdater
         {
             CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
             ci.NumberFormat.CurrencyDecimalSeparator = ".";
-
-            if (progressBar1.InvokeRequired)
-            {
-                progressBar1.Invoke((MethodInvoker) delegate { progressBar1.Value = 0; });
-            }
-            else
-            {
-                progressBar1.Value = 0;
-            }
+            delUpdateUIProgressBar DelUpdateUIProgressBar = new delUpdateUIProgressBar(UpdateUIProgressBar);
+            delUpdateUILabelInformation DelUpdateUILabelInformation = new delUpdateUILabelInformation(UpdateUILabelInformation);
 
             WebClient webClient = new WebClient();
             webClient.Headers.Add("user-agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.2; .NET CLR 1.0.3705;)");
 
+            
+            this.progressBar1.BeginInvoke(DelUpdateUIProgressBar, 0);
+
             for (int i = 0; i < heroCount; i++)
             {
+                this.labelInformation.BeginInvoke(DelUpdateUILabelInformation, "Fetching hero-data: " + heroNames[i]);
                 try
                 {
                     string pageSourceCode = webClient.DownloadString(@"http://www.dotabuff.com/heroes/" + heroNames[i] + "/matchups");
+
 
                     pageSourceCode = pageSourceCode.Substring(pageSourceCode.IndexOf("tbody") + 6);
                     pageSourceCode = pageSourceCode.Substring(0, pageSourceCode.IndexOf("tbody") - 2);
@@ -267,25 +323,10 @@ namespace DotaAnalyzerUpdater
                 }
                 heroList[i].CalculateExtendedAdvantage();
 
-                if (progressBar1.InvokeRequired)
-                {
-                    progressBar1.Invoke((MethodInvoker)delegate { progressBar1.Value++; });
-                }
-                else
-                {
-                    progressBar1.Value++;
-                }
+                this.progressBar1.BeginInvoke(DelUpdateUIProgressBar, i);
+                
+                
             }
-
-            if (progressBar1.InvokeRequired)
-            {
-                progressBar1.Invoke((MethodInvoker)delegate { progressBar1.Value = 0; });
-            }
-            else
-            {
-                progressBar1.Value = 0;
-            }
-
             return true;
         }
 
@@ -294,21 +335,18 @@ namespace DotaAnalyzerUpdater
         private void PerformUpdate(object source, ElapsedEventArgs e)
         {
             remainingMinutes--;
-            if (label1.InvokeRequired)
+            if (labelUpdateStatus.InvokeRequired)
             {
-                label1.Invoke((MethodInvoker)delegate { label1.Text = "Next Auto Update in " + remainingMinutes + " minutes."; });
+                labelUpdateStatus.Invoke((MethodInvoker)delegate { labelUpdateStatus.Text = "Next Auto Update in " + remainingMinutes + " minutes."; });
             }
             else
             {
-                label1.Text = label1.Text = "Next Auto Update in " + remainingMinutes + " minutes.";
+                labelUpdateStatus.Text = labelUpdateStatus.Text = "Next Auto Update in " + remainingMinutes + " minutes.";
             }
             if (remainingMinutes == 0)
             {
                 remainingMinutes = 600;
-                if (DownloadData())
-                {
-                    UpdateDatabase();
-                }
+                CreateUpdateThread();
             }
         }
 
@@ -316,10 +354,7 @@ namespace DotaAnalyzerUpdater
 
         private void button1_Click(object sender, EventArgs e)
         {
-            if (DownloadData())
-            {
-                UpdateDatabase();
-            }
+            CreateUpdateThread();
         }
     }
 }
