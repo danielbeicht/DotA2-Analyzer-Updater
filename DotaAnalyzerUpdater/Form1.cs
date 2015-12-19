@@ -124,17 +124,6 @@ namespace DotaAnalyzerUpdater
             com = new SqlCommand(deleteMatchupRequest, connection);
             com.ExecuteNonQuery();
 
-            /*
-            string addHeroRequest = "insert into Held (HeldName, HeldFullName, HeldIndex) values (@HeldName, @HeldFullName, @HeldIndex)";
-            for (int i = 0; i < heroCount; i++)
-            {
-                com = new SqlCommand(addHeroRequest, connection);
-                com.Parameters.AddWithValue("@HeldName", heroList[i].name);
-                com.Parameters.AddWithValue("@HeldFullName", heroList[i].fullName);
-                com.Parameters.AddWithValue("@HeldIndex", heroList[i].index);
-                com.ExecuteNonQuery();
-            }
-            */
 
             //Load Ids of heroes
             string heroExistsRequest;
@@ -334,17 +323,3 @@ namespace DotaAnalyzerUpdater
         }
     }
 }
-
-
-
-
-/*
-
-
-
- SqlCommand com = new SqlCommand(checkuser, connection);                                                        // Erstelle command
-            int temp = Convert.ToInt32(com.ExecuteScalar().ToString());                                             // Führe command aus und schreibe Wert in temp var
-
-
-            string checkuser = "select count(*) from Account where AccountName='" + "MZG.Necrsdoss" + "'";                 // Erstelle String zur Abfrage
-*/
