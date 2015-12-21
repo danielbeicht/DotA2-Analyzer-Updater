@@ -20,6 +20,9 @@ namespace DotaAnalyzerUpdater
 {
     public partial class Form1 : Form
     {
+        private readonly string USER = "";
+        private readonly string PASS = "";
+
         public static string[] heroNames = { "abaddon", "alchemist", "ancient-apparition", "anti-mage", "arc-warden", "axe",
                            "bane", "batrider", "beastmaster", "bloodseeker", "bounty-hunter",
                            "brewmaster", "bristleback", "broodmother", "centaur-warrunner", "chaos-knight",
@@ -161,7 +164,7 @@ namespace DotaAnalyzerUpdater
         {
             delUpdateUILabelInformation DelUpdateUILabelInformation = new delUpdateUILabelInformation(UpdateUILabelInformation);
             //Create connection to database
-            connection = new SqlConnection("data source = 192.168.2.202; database = test; user id = testuser2; password = 13DotAMZHostAnalyzer37");
+            connection = new SqlConnection("data source = 192.168.2.202; database = test; user id = " + USER + "; password = " + PASS);
             connection.Open();
 
             
@@ -351,7 +354,6 @@ namespace DotaAnalyzerUpdater
         }
 
 
-        //test
         private void button1_Click(object sender, EventArgs e)
         {
             CreateUpdateThread();
