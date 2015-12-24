@@ -20,7 +20,7 @@ namespace DotaAnalyzerUpdater
 {
     public partial class Form1 : Form
     {
-        private readonly string USER = "";
+        private readonly string USER = "uu";
         private readonly string PASS = "";
 
         public static string[] heroNames = { "abaddon", "alchemist", "ancient-apparition", "anti-mage", "arc-warden", "axe",
