@@ -20,8 +20,8 @@ namespace DotaAnalyzerUpdater
 {
     public partial class Form1 : Form
     {
-        private readonly string USER = "uu";
-        private readonly string PASS = "";
+        private readonly string USER = "???";
+        private readonly string PASS = "???";
 
         public static string[] heroNames = { "abaddon", "alchemist", "ancient-apparition", "anti-mage", "arc-warden", "axe",
                            "bane", "batrider", "beastmaster", "bloodseeker", "bounty-hunter",
@@ -33,7 +33,7 @@ namespace DotaAnalyzerUpdater
                            "invoker", "io", "jakiro", "juggernaut", "keeper-of-the-light",
                            "kunkka", "legion-commander", "leshrac", "lich", "lifestealer",
                            "lina", "lion", "lone-druid", "luna", "lycan",
-                           "magnus", "medusa", "meepo", "mirana", "morphling",
+                           "magnus", "medusa", "meepo", "mirana", "monkey-king", "morphling",
                            "naga-siren", "natures-prophet", "necrophos", "night-stalker", "nyx-assassin",
                            "ogre-magi", "omniknight", "oracle", "outworld-devourer", "phantom-assassin",
                            "phantom-lancer", "phoenix", "puck", "pudge", "pugna",
@@ -42,7 +42,7 @@ namespace DotaAnalyzerUpdater
                            "slardar", "slark", "sniper", "spectre", "spirit-breaker",
                            "storm-spirit", "sven", "techies", "templar-assassin", "terrorblade",
                            "tidehunter", "timbersaw", "tinker", "tiny", "treant-protector",
-                           "troll-warlord", "tusk", "undying", "ursa", "vengeful-spirit",
+                           "troll-warlord", "tusk", "underlord", "undying", "ursa", "vengeful-spirit",
                            "venomancer", "viper", "visage", "warlock", "weaver",
                            "windranger", "winter-wyvern", "witch-doctor", "wraith-king", "zeus"
                            };
@@ -56,7 +56,7 @@ namespace DotaAnalyzerUpdater
                            "Invoker", "Io", "Jakiro", "Juggernaut", "Keeper of the Light",
                            "Kunkka", "Legion Commander", "Leshrac", "Lich", "Lifestealer",
                            "Lina", "Lion", "Lone Druid", "Luna", "Lycan",
-                           "Magnus", "Medusa", "Meepo", "Mirana", "Morphling",
+                           "Magnus", "Medusa", "Meepo", "Mirana", "Monkey King", "Morphling",
                            "Naga Siren", "Nature's Prophet", "Necrophos", "Night Stalker", "Nyx Assassin",
                            "Ogre Magi", "Omniknight", "Oracle", "Outworld Devourer", "Phantom Assassin",
                            "Phantom Lancer", "Phoenix", "Puck", "Pudge", "Pugna",
@@ -65,7 +65,7 @@ namespace DotaAnalyzerUpdater
                            "Slardar", "Slark", "Sniper", "Spectre", "Spirit Breaker",
                            "Storm Spirit", "Sven", "Techies", "Templar Assassin", "Terrorblade",
                            "Tidehunter", "Timbersaw", "Tinker", "Tiny", "Treant Protector",
-                           "Troll Warlord", "Tusk", "Undying", "Ursa", "Vengeful Spirit",
+                           "Troll Warlord", "Tusk", "Underlord", "Undying", "Ursa", "Vengeful Spirit",
                            "Venomancer", "Viper", "Visage", "Warlock", "Weaver",
                            "Windranger", "Winter Wyvern", "Witch Doctor", "Wraith King", "Zeus"
                            };
@@ -164,19 +164,19 @@ namespace DotaAnalyzerUpdater
         {
             delUpdateUILabelInformation DelUpdateUILabelInformation = new delUpdateUILabelInformation(UpdateUILabelInformation);
             //Create connection to database
-            connection = new SqlConnection("data source = 192.168.2.202; database = test; user id = " + USER + "; password = " + PASS);
+            connection = new SqlConnection("data source = 192.168.3.202; database = DotAAnalyzerDB; user id = " + USER + "; password = " + PASS);
             connection.Open();
 
             
-            string deleteAktualisierungRequest = "delete from Aktualisierung";
+            //string deleteAktualisierungRequest = "delete from Aktualisierung";
             SqlCommand com;
-            com = new SqlCommand(deleteAktualisierungRequest, connection);
-            com.ExecuteNonQuery();
+            //com = new SqlCommand(deleteAktualisierungRequest, connection);
+            //com.ExecuteNonQuery();
 
-            string addAktualisierungRequest = "insert into Aktualisierung (lastUpdate) values (@lastUpdate)";
-            com = new SqlCommand(addAktualisierungRequest, connection);
-            com.Parameters.AddWithValue("@lastUpdate", DateTime.Now.ToString());
-            com.ExecuteNonQuery();
+            //string addAktualisierungRequest = "insert into Aktualisierung (lastUpdate) values (@lastUpdate)";
+            //com = new SqlCommand(addAktualisierungRequest, connection);
+            //com.Parameters.AddWithValue("@lastUpdate", DateTime.Now.ToString());
+            //com.ExecuteNonQuery();
 
             //Delete Matchup table
             string deleteMatchupRequest = "delete from Matchup";
@@ -277,11 +277,16 @@ namespace DotaAnalyzerUpdater
                 this.labelInformation.BeginInvoke(DelUpdateUILabelInformation, "Fetching hero-data: " + heroNames[i]);
                 try
                 {
-                    string pageSourceCode = webClient.DownloadString(@"http://www.dotabuff.com/heroes/" + heroNames[i] + "/matchups");
+                    string pageSourceCode = webClient.DownloadString(@"https://www.dotabuff.com/heroes/" + heroNames[i] + "/matchups");
 
 
-                    pageSourceCode = pageSourceCode.Substring(pageSourceCode.IndexOf("tbody") + 6);
-                    pageSourceCode = pageSourceCode.Substring(0, pageSourceCode.IndexOf("tbody") - 2);
+                    
+                    int indextbody = pageSourceCode.IndexOf("tbody");
+                    indextbody = pageSourceCode.IndexOf("tbody", indextbody+6);
+                    indextbody = pageSourceCode.IndexOf("tbody", indextbody + 6);
+                    int indextbody2 = pageSourceCode.IndexOf("tbody", indextbody + 6);
+                    pageSourceCode = pageSourceCode.Substring(indextbody);
+                    //pageSourceCode = pageSourceCode.Substring(indextbody, indextbody2 - indextbody);
 
                     for (int j = 0; j < heroCount; j++)
                     {
