@@ -1,0 +1,154 @@
+﻿/*public static string[] heroNames = { "abaddon", "alchemist", "ancient-apparition", "anti-mage", "arc-warden", "axe",
+"bane", "batrider", "beastmaster", "bloodseeker", "bounty-hunter",
+"brewmaster", "bristleback", "broodmother", "centaur-warrunner", "chaos-knight",
+"chen", "clinkz", "clockwerk", "crystal-maiden", "dark-seer", "dark-willow",
+"dazzle", "death-prophet", "disruptor", "doom", "dragon-knight",
+"drow-ranger", "earthshaker", "earth-spirit", "elder-titan", "ember-spirit",
+"enchantress", "enigma", "faceless-void", "gyrocopter", "huskar",
+"invoker", "io", "jakiro", "juggernaut", "keeper-of-the-light",
+"kunkka", "legion-commander", "leshrac", "lich", "lifestealer",
+"lina", "lion", "lone-druid", "luna", "lycan",
+"magnus", "medusa", "meepo", "mirana", "monkey-king", "morphling",
+"naga-siren", "natures-prophet", "necrophos", "night-stalker", "nyx-assassin",
+"ogre-magi", "omniknight", "oracle", "outworld-devourer", "pangolier", "phantom-assassin",
+"phantom-lancer", "phoenix", "puck", "pudge", "pugna",
+"queen-of-pain", "razor", "riki", "rubick", "sand-king",
+"shadow-demon", "shadow-fiend", "shadow-shaman", "silencer", "skywrath-mage",
+"slardar", "slark", "sniper", "spectre", "spirit-breaker",
+"storm-spirit", "sven", "techies", "templar-assassin", "terrorblade",
+"tidehunter", "timbersaw", "tinker", "tiny", "treant-protector",
+"troll-warlord", "tusk", "underlord", "undying", "ursa", "vengeful-spirit",
+"venomancer", "viper", "visage", "warlock", "weaver",
+"windranger", "winter-wyvern", "witch-doctor", "wraith-king", "zeus"
+};*/
+/*public static string[] heroNamesF = { "Abaddon", "Alchemist", "Ancient Apparition", "Anti Mage", "Arc Warden", "Axe",
+"Bane", "Batrider", "Beastmaster", "Bloodseeker", "Bounty Hunter",
+"Brewmaster", "Bristleback", "Broodmother", "Centaur Warrunner", "Chaos Knight",
+"Chen", "Clinkz", "Clockwerk", "Crystal Maiden", "Dark Seer", "Dark Willow",
+"Dazzle", "Death Prophet", "Disruptor", "Doom", "Dragon Knight",
+"Drow Ranger", "Earthshaker", "Earth Spirit", "Elder Titan", "Ember Spirit",
+"Enchantress", "Enigma", "Faceless Void", "Gyrocopter", "Huskar",
+"Invoker", "Io", "Jakiro", "Juggernaut", "Keeper of the Light",
+"Kunkka", "Legion Commander", "Leshrac", "Lich", "Lifestealer",
+"Lina", "Lion", "Lone Druid", "Luna", "Lycan",
+"Magnus", "Medusa", "Meepo", "Mirana", "Monkey King", "Morphling",
+"Naga Siren", "Nature's Prophet", "Necrophos", "Night Stalker", "Nyx Assassin",
+"Ogre Magi", "Omniknight", "Oracle", "Outworld Devourer", "Pangolier", "Phantom Assassin",
+"Phantom Lancer", "Phoenix", "Puck", "Pudge", "Pugna",
+"Queen of Pain", "Razor", "Riki", "Rubick", "Sand King",
+"Shadow Demon", "Shadow Fiend", "Shadow Shaman", "Silencer", "Skywrath Mage",
+"Slardar", "Slark", "Sniper", "Spectre", "Spirit Breaker",
+"Storm Spirit", "Sven", "Techies", "Templar Assassin", "Terrorblade",
+"Tidehunter", "Timbersaw", "Tinker", "Tiny", "Treant Protector",
+"Troll Warlord", "Tusk", "Underlord", "Undying", "Ursa", "Vengeful Spirit",
+"Venomancer", "Viper", "Visage", "Warlock", "Weaver",
+"Windranger", "Winter Wyvern", "Witch Doctor", "Wraith King", "Zeus"
+};*/
+
+
+
+
+
+
+
+
+
+
+
+private void UpdateDatabase()
+        {
+            SqlConnection connection;
+            delUpdateUILabelInformation DelUpdateUILabelInformation = new delUpdateUILabelInformation(UpdateUILabelInformation);
+            //Create connection to database
+            connection = new SqlConnection("data source = 192.168.3.202; database = DotAAnalyzerDB; user id = " + USER + "; password = " + PASS);
+            connection.Open();
+
+            
+            //string deleteAktualisierungRequest = "delete from Aktualisierung";
+            SqlCommand com;
+            //com = new SqlCommand(deleteAktualisierungRequest, connection);
+            //com.ExecuteNonQuery();
+
+            //string addAktualisierungRequest = "insert into Aktualisierung (lastUpdate) values (@lastUpdate)";
+            //com = new SqlCommand(addAktualisierungRequest, connection);
+            //com.Parameters.AddWithValue("@lastUpdate", DateTime.Now.ToString());
+            //com.ExecuteNonQuery();
+
+            //Delete Matchup table
+            string deleteMatchupRequest = "delete from Matchup";
+            com = new SqlCommand(deleteMatchupRequest, connection);
+            com.ExecuteNonQuery();
+
+
+            //Load Ids of heroes
+            string heroExistsRequest;
+            int heroExistsCount;
+            string heroIdRequest;
+            string addHeroRequest = "insert into Held (HeldFullName, HeldID) values (@HeldFullName, @HeldID)"; //name index und valveindex gelöscht
+            int[] heroId = new int[heroCount];
+            bool newHero = false;
+            for (int i = 0; i < heroCount; i++)
+            {
+                this.labelInformation.BeginInvoke(DelUpdateUILabelInformation, "Insert hero-data into database: " + ((KeyValuePair<int, string>)heroNamesDotabuff[i]).Value);
+                heroExistsRequest = "select COUNT(*) from Held where HeldFullName = '" + heroList[i].fullName + "'";
+                com = new SqlCommand(heroExistsRequest, connection);
+                heroExistsCount = Convert.ToInt32(com.ExecuteScalar().ToString());
+
+                if (heroExistsCount >= 1)
+                {
+                    //heroIdRequest = "select HeldID from Held where HeldFullName='" + heroList[i].fullName + "'";
+                    //com = new SqlCommand(heroIdRequest, connection);
+                    //heroId[i] = Convert.ToInt32(com.ExecuteScalar().ToString());
+                }
+                else
+                {
+                    newHero = true;
+                    com = new SqlCommand(addHeroRequest, connection);
+                    //com.Parameters.AddWithValue("@HeldName", heroList[i].name);
+                    com.Parameters.AddWithValue("@HeldFullName", heroList[i].fullName);
+                    com.Parameters.AddWithValue("@HeldID", heroList[i].index);
+                    com.ExecuteNonQuery();
+
+                    //heroIdRequest = "select HeldID from Held where HeldName='" + heroList[i].name + "'";
+                    //com = new SqlCommand(heroIdRequest, connection);
+                    //heroId[i] = Convert.ToInt32(com.ExecuteScalar().ToString());
+                }
+            }
+
+
+            //Update Indices of heroes
+            /*
+            if (newHero)
+            {
+                string updateIndexRequest;
+                for (int i = 0; i < heroCount; i++)
+                {
+                    this.labelInformation.BeginInvoke(DelUpdateUILabelInformation, "Update hero-data-indices in database: " + ((KeyValuePair<int, string>)heroNamesDotabuff[i]).Value);
+                    updateIndexRequest = "update Held set HeldID=@HeldID where HeldName=@HeldName";
+                    com = new SqlCommand(updateIndexRequest, connection);
+                    com.Parameters.AddWithValue("@HeldID", i);
+                    com.Parameters.AddWithValue("@HeldName", ((KeyValuePair<int, string>)heroNamesDotabuff[i]).Value);
+                    com.ExecuteNonQuery();
+                }
+            }*/
+
+
+            //Add Matchup entries
+            string addMatchupRequest = "insert into Matchup (HeldID1, HeldID2, Advantage, NormalizedAdvantage, Winrate) values (@HeldID1, @HeldID2, @Advantage, @NormalizedAdvantage, @Winrate)";
+            for (int i = 0; i < heroCount; i++)
+            {
+                for (int j = 0; j < heroCount; j++)
+                {
+                    this.labelInformation.BeginInvoke(DelUpdateUILabelInformation, "Add Matchup entry: " + ((KeyValuePair<int, string>)heroNamesDotabuff[i]).Value + " vs. " + ((KeyValuePair<int, string>)heroNamesDotabuff[j]).Value);
+                    com = new SqlCommand(addMatchupRequest, connection);
+                    com.Parameters.AddWithValue("@HeldID1", heroList[i].index);
+                    com.Parameters.AddWithValue("@HeldID2", heroList[j].index);
+                    com.Parameters.AddWithValue("@Advantage", heroList[i].advantage[j]);
+                    com.Parameters.AddWithValue("@NormalizedAdvantage", heroList[i].advantage_zeroAsAvg[j]);
+                    com.Parameters.AddWithValue("@Winrate", heroList[i].winrate[j]);
+                    com.ExecuteNonQuery();  
+                }
+            }
+            this.labelInformation.BeginInvoke(DelUpdateUILabelInformation, "Success");
+            connection.Close();
+        }
