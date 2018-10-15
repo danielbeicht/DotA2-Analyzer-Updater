@@ -23,8 +23,8 @@ namespace DotaAnalyzerUpdater
     public partial class Form1 : Form
     {
         // Initialize global variables
-        private readonly string USER = "dota";
-        private readonly string PASS = "DotA123";
+        private readonly string USER = "";
+        private readonly string PASS = "";
         
         public static ArrayList heroNamesDotabuff = new ArrayList();
         public static ArrayList heroNamesFull = new ArrayList();
